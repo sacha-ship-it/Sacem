@@ -1,0 +1,25 @@
+[
+  {
+    "question": "Combien de cordes possède une guitare classique standard ?",
+    "choices": ["4", "5", "6", "8"],
+    "answer": 2,
+    "explanation": "Une guitare classique standard possède six cordes."
+  },
+  {
+    "question": "Quel instrument est un instrument à vent ?",
+    "choices": ["Le piano", "La trompette", "Le violon", "La batterie"],
+    "answer": 1,
+    "explanation": "La trompette appartient à la famille des cuivres."
+  },
+  {
+    "question": "Que désigne le tempo ?",
+    "choices": [
+      "La vitesse du morceau",
+      "Son volume sonore",
+      "Sa durée",
+      "Son nombre de voix"
+    ],
+    "answer": 0,
+    "explanation": "Le tempo indique la vitesse d’exécution musicale."
+  }
+]
