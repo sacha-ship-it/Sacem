@@ -29,10 +29,6 @@ const {
   createLootbox,
 } = require('./lootbox');
 
-// ============================================================
-// STOCKAGE ET RÈGLES DES JEUX
-// ============================================================
-
 const {
   Store,
   Engine,
@@ -46,7 +42,8 @@ const {
   const { randomBytes, randomInt } = require('node:crypto');
   const config = require('./config');
 
-  const id = () => randomBytes(9).toString('hex');
+  const id = () =>
+    randomBytes(9).toString('hex');
 
   const fail = message => {
     throw new Error(message);
@@ -74,7 +71,9 @@ const {
       /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/.exec(s || '');
 
     if (!m) {
-      fail('Date attendue : AAAA-MM-JJ HH:mm, heure de Paris.');
+      fail(
+        'Date attendue : AAAA-MM-JJ HH:mm, heure de Paris.'
+      );
     }
 
     const utc = Date.UTC(
@@ -116,7 +115,9 @@ const {
       q.length < 1 ||
       q.length > 30
     ) {
-      fail('Le quiz doit contenir entre 1 et 30 questions.');
+      fail(
+        'Le quiz doit contenir entre 1 et 30 questions.'
+      );
     }
 
     for (const x of q) {
@@ -204,7 +205,10 @@ const {
       `);
 
       if (!this.setting('season')) {
-        this.setting('season', 'Saison 1');
+        this.setting(
+          'season',
+          'Saison 1'
+        );
       }
     }
 
@@ -214,23 +218,34 @@ const {
           INSERT INTO settings VALUES(?,?)
           ON CONFLICT(key)
           DO UPDATE SET json=excluded.json
-        `).run(k, JSON.stringify(v));
+        `).run(
+          k,
+          JSON.stringify(v)
+        );
       }
 
       const r = this.db
-        .prepare('SELECT json FROM settings WHERE key=?')
+        .prepare(
+          'SELECT json FROM settings WHERE key=?'
+        )
         .get(k);
 
-      return r ? JSON.parse(r.json) : null;
+      return r
+        ? JSON.parse(r.json)
+        : null;
     }
 
     activity(activityId) {
       const r = this.db
-        .prepare('SELECT json FROM activities WHERE id=?')
+        .prepare(
+          'SELECT json FROM activities WHERE id=?'
+        )
         .get(activityId);
 
       if (!r) {
-        fail('Animation introuvable.');
+        fail(
+          'Animation introuvable.'
+        );
       }
 
       return JSON.parse(r.json);
@@ -238,9 +253,13 @@ const {
 
     all() {
       return this.db
-        .prepare('SELECT json FROM activities')
+        .prepare(
+          'SELECT json FROM activities'
+        )
         .all()
-        .map(r => JSON.parse(r.json));
+        .map(
+          r => JSON.parse(r.json)
+        );
     }
 
     save(a) {
@@ -262,7 +281,9 @@ const {
         WHERE activity=? AND user=?
       `).get(a, u);
 
-      return r ? JSON.parse(r.json) : null;
+      return r
+        ? JSON.parse(r.json)
+        : null;
     }
 
     saveSession(s) {
@@ -288,19 +309,35 @@ const {
     }
 
     tx(fn) {
-      this.db.exec('BEGIN IMMEDIATE');
+      this.db.exec(
+        'BEGIN IMMEDIATE'
+      );
 
       try {
         const x = fn();
-        this.db.exec('COMMIT');
+
+        this.db.exec(
+          'COMMIT'
+        );
+
         return x;
       } catch (e) {
-        this.db.exec('ROLLBACK');
+        this.db.exec(
+          'ROLLBACK'
+        );
+
         throw e;
       }
     }
 
-    award(key, a, user, name, points, now) {
+    award(
+      key,
+      a,
+      user,
+      name,
+      points,
+      now
+    ) {
       return this.db.prepare(`
         INSERT OR IGNORE INTO ledger
         VALUES(?,?,?,?,?,?,?)
@@ -315,7 +352,9 @@ const {
       ).changes;
     }
 
-    ranking(season = this.setting('season')) {
+    ranking(
+      season = this.setting('season')
+    ) {
       const r = this.db.prepare(`
         SELECT user, max(name) name, sum(points) points
         FROM ledger
@@ -326,7 +365,8 @@ const {
 
       r.forEach((x, i) => {
         x.rank =
-          i && r[i - 1].points === x.points
+          i &&
+          r[i - 1].points === x.points
             ? r[i - 1].rank
             : i + 1;
       });
@@ -336,7 +376,10 @@ const {
   }
 
   class Engine {
-    constructor(store, now = () => Date.now()) {
+    constructor(
+      store,
+      now = () => Date.now()
+    ) {
       this.store = store;
       this.now = now;
     }
@@ -357,23 +400,39 @@ const {
       }
 
       if (data.kind === 'quiz') {
-        validateQuestions(data.questions);
+        validateQuestions(
+          data.questions
+        );
       } else if (
         !Array.isArray(data.answers) ||
-        !data.answers.some(x => normal(x))
+        !data.answers.some(
+          x => normal(x)
+        )
       ) {
-        fail('Renseigne au moins une réponse acceptée.');
+        fail(
+          'Renseigne au moins une réponse acceptée.'
+        );
       }
 
       return this.store.save({
         ...data,
-        id: data.id || id(),
-        season: this.store.setting('season'),
+
+        id:
+          data.id || id(),
+
+        season:
+          this.store.setting('season'),
+
         status: 'scheduled',
         message: null,
         revealed: false,
         created: this.now(),
-        rules: structuredClone(config[data.kind]),
+
+        rules:
+          structuredClone(
+            config[data.kind]
+          ),
+
         error: null,
       });
     }
@@ -384,7 +443,9 @@ const {
         this.now() < a.open ||
         this.now() >= a.close
       ) {
-        fail(config.text.late);
+        fail(
+          config.text.late
+        );
       }
     }
 
@@ -394,13 +455,16 @@ const {
         this.now() >= s.deadline
       ) {
         if (a.kind === 'quiz') {
-          s.phase = 'feedback';
+          s.phase =
+            'feedback';
 
           s.last = {
             correct: false,
             timeout: true,
             points: 0,
-            answer: a.questions[s.index].answer,
+
+            answer:
+              a.questions[s.index].answer,
           };
         } else {
           s.phase =
@@ -415,18 +479,32 @@ const {
       return s;
     }
 
-    start(aid, user, name) {
+    start(
+      aid,
+      user,
+      name
+    ) {
       return this.store.tx(() => {
-        const a = this.store.activity(aid);
+        const a =
+          this.store.activity(aid);
+
         this.open(a);
 
-        let s = this.store.session(aid, user);
+        let s =
+          this.store.session(
+            aid,
+            user
+          );
 
         if (s) {
-          return this.refresh(a, s);
+          return this.refresh(
+            a,
+            s
+          );
         }
 
-        const now = this.now();
+        const now =
+          this.now();
 
         const duration =
           a.kind === 'blind'
@@ -436,14 +514,17 @@ const {
         s = {
           activity: aid,
           user,
-          name: name.slice(0, 80),
+          name:
+            name.slice(0, 80),
+
           stage: 0,
           index: 0,
           phase: 'playing',
           points: 0,
           history: [],
           started: now,
-          available: now + duration,
+          available:
+            now + duration,
 
           deadline:
             now +
@@ -464,32 +545,56 @@ const {
           now
         );
 
-        return this.store.saveSession(s);
+        return this.store
+          .saveSession(s);
       });
     }
 
-    get(aid, user) {
-      const a = this.store.activity(aid);
-      const s = this.store.session(aid, user);
+    get(
+      aid,
+      user
+    ) {
+      const a =
+        this.store.activity(aid);
+
+      const s =
+        this.store.session(
+          aid,
+          user
+        );
 
       if (!s) {
-        fail('Commence par le bouton Participer.');
+        fail(
+          'Commence par le bouton Participer.'
+        );
       }
 
-      return this.store.tx(() =>
-        this.refresh(a, s)
+      return this.store.tx(
+        () => this.refresh(a, s)
       );
     }
 
-    stage(aid, user, expected) {
+    stage(
+      aid,
+      user,
+      expected
+    ) {
       return this.store.tx(() => {
-        const a = this.store.activity(aid);
+        const a =
+          this.store.activity(aid);
+
         this.open(a);
 
-        const s = this.store.session(aid, user);
+        const s =
+          this.store.session(
+            aid,
+            user
+          );
 
         if (!s) {
-          fail('Participation introuvable.');
+          fail(
+            'Participation introuvable.'
+          );
         }
 
         this.refresh(a, s);
@@ -505,15 +610,20 @@ const {
           );
         }
 
-        if (this.now() < s.available) {
+        if (
+          this.now() < s.available
+        ) {
           fail(
             'Attends la durée de l’extrait avant de passer au suivant.'
           );
         }
 
         if (s.stage === 2) {
-          s.phase = 'finished';
-          return this.store.saveSession(s);
+          s.phase =
+            'finished';
+
+          return this.store
+            .saveSession(s);
         }
 
         s.stage++;
@@ -532,19 +642,33 @@ const {
           s.available +
           a.rules.answerSeconds * 1000;
 
-        return this.store.saveSession(s);
+        return this.store
+          .saveSession(s);
       });
     }
 
-    answer(aid, user, expected, input) {
+    answer(
+      aid,
+      user,
+      expected,
+      input
+    ) {
       return this.store.tx(() => {
-        const a = this.store.activity(aid);
+        const a =
+          this.store.activity(aid);
+
         this.open(a);
 
-        const s = this.store.session(aid, user);
+        const s =
+          this.store.session(
+            aid,
+            user
+          );
 
         if (!s) {
-          fail('Participation introuvable.');
+          fail(
+            'Participation introuvable.'
+          );
         }
 
         this.refresh(a, s);
@@ -559,21 +683,30 @@ const {
           );
         }
 
-        const correct = a.answers.some(
-          x => normal(x) === normal(input)
-        );
+        const correct =
+          a.answers.some(
+            x => normal(x) === normal(input)
+          );
 
-        s.phase = 'finished';
-        s.result = correct ? 'correct' : 'wrong';
+        s.phase =
+          'finished';
 
-        s.points = correct
-          ? a.rules.points[s.stage]
-          : 0;
+        s.result =
+          correct
+            ? 'correct'
+            : 'wrong';
+
+        s.points =
+          correct
+            ? a.rules.points[s.stage]
+            : 0;
 
         s.history.push({
           stage: s.stage,
           correct,
-          answer: String(input).slice(0, 250),
+
+          answer:
+            String(input).slice(0, 250),
         });
 
         if (correct) {
@@ -587,19 +720,33 @@ const {
           );
         }
 
-        return this.store.saveSession(s);
+        return this.store
+          .saveSession(s);
       });
     }
 
-    quizAnswer(aid, user, index, choice) {
+    quizAnswer(
+      aid,
+      user,
+      index,
+      choice
+    ) {
       return this.store.tx(() => {
-        const a = this.store.activity(aid);
+        const a =
+          this.store.activity(aid);
+
         this.open(a);
 
-        const s = this.store.session(aid, user);
+        const s =
+          this.store.session(
+            aid,
+            user
+          );
 
         if (!s) {
-          fail('Participation introuvable.');
+          fail(
+            'Participation introuvable.'
+          );
         }
 
         this.refresh(a, s);
@@ -615,35 +762,43 @@ const {
           );
         }
 
-        const q = a.questions[index];
+        const q =
+          a.questions[index];
 
         if (
           !Number.isInteger(choice) ||
           choice < 0 ||
           choice >= q.choices.length
         ) {
-          fail('Choix invalide.');
+          fail(
+            'Choix invalide.'
+          );
         }
 
-        const correct = choice === q.answer;
-        const elapsed = this.now() - s.started;
+        const correct =
+          choice === q.answer;
 
-        const points = correct
-          ? Math.max(
-              a.rules.minPoints,
-              Math.round(
-                a.rules.maxPoints -
-                (
+        const elapsed =
+          this.now() - s.started;
+
+        const points =
+          correct
+            ? Math.max(
+                a.rules.minPoints,
+                Math.round(
                   a.rules.maxPoints -
-                  a.rules.minPoints
-                ) *
-                elapsed /
-                (a.rules.seconds * 1000)
+                  (
+                    a.rules.maxPoints -
+                    a.rules.minPoints
+                  ) *
+                  elapsed /
+                  (a.rules.seconds * 1000)
+                )
               )
-            )
-          : 0;
+            : 0;
 
-        s.phase = 'feedback';
+        s.phase =
+          'feedback';
 
         s.last = {
           correct,
@@ -673,19 +828,32 @@ const {
           );
         }
 
-        return this.store.saveSession(s);
+        return this.store
+          .saveSession(s);
       });
     }
 
-    quizNext(aid, user, index) {
+    quizNext(
+      aid,
+      user,
+      index
+    ) {
       return this.store.tx(() => {
-        const a = this.store.activity(aid);
+        const a =
+          this.store.activity(aid);
+
         this.open(a);
 
-        const s = this.store.session(aid, user);
+        const s =
+          this.store.session(
+            aid,
+            user
+          );
 
         if (!s) {
-          fail('Participation introuvable.');
+          fail(
+            'Participation introuvable.'
+          );
         }
 
         this.refresh(a, s);
@@ -713,23 +881,35 @@ const {
         s.index++;
         s.last = null;
 
-        if (s.index >= a.questions.length) {
-          s.phase = 'finished';
+        if (
+          s.index >= a.questions.length
+        ) {
+          s.phase =
+            'finished';
         } else {
-          s.phase = 'playing';
-          s.started = this.now();
-          s.available = s.started;
+          s.phase =
+            'playing';
+
+          s.started =
+            this.now();
+
+          s.available =
+            s.started;
 
           s.deadline =
             s.started +
             a.rules.seconds * 1000;
         }
 
-        return this.store.saveSession(s);
+        return this.store
+          .saveSession(s);
       });
     }
 
-    loot(user, name) {
+    loot(
+      user,
+      name
+    ) {
       return this.store.tx(() => {
         const season =
           this.store.setting('season');
@@ -750,17 +930,26 @@ const {
           );
         }
 
-        const total = config.loot.reduce(
-          (s, x) => s + x.weight,
-          0
-        );
+        const total =
+          config.loot.reduce(
+            (s, x) => s + x.weight,
+            0
+          );
 
-        let n = randomInt(total);
+        let n =
+          randomInt(total);
+
         let points = 0;
 
-        for (const x of config.loot) {
-          if (n < x.weight) {
-            points = x.points;
+        for (
+          const x of config.loot
+        ) {
+          if (
+            n < x.weight
+          ) {
+            points =
+              x.points;
+
             break;
           }
 
@@ -795,23 +984,33 @@ const {
   };
 })();
 
-// ============================================================
-// AUDIO, IMAGES ET BANNIÈRES
-// ============================================================
-
 const {
   download,
   prepare,
   banner,
 } = (() => {
-  const fs = require('node:fs/promises');
-  const path = require('node:path');
-  const { execFile } = require('node:child_process');
-  const { promisify } = require('node:util');
-  const sharp = require('sharp');
-  const config = require('./config');
+  const fs =
+    require('node:fs/promises');
 
-  const run = promisify(execFile);
+  const path =
+    require('node:path');
+
+  const {
+    execFile,
+  } = require('node:child_process');
+
+  const {
+    promisify,
+  } = require('node:util');
+
+  const sharp =
+    require('sharp');
+
+  const config =
+    require('./config');
+
+  const run =
+    promisify(execFile);
 
   async function download(
     url,
@@ -822,7 +1021,8 @@ const {
       redirects < 4;
       redirects++
     ) {
-      const u = new URL(url);
+      const u =
+        new URL(url);
 
       if (
         u.protocol !== 'https:' ||
@@ -836,19 +1036,24 @@ const {
         );
       }
 
-      const r = await fetch(u, {
-        redirect: 'manual',
-        signal: AbortSignal.timeout(30000),
-      });
+      const r = await fetch(
+        u,
+        {
+          redirect: 'manual',
+          signal:
+            AbortSignal.timeout(30000),
+        }
+      );
 
       if (
         r.status >= 300 &&
         r.status < 400
       ) {
-        url = new URL(
-          r.headers.get('location'),
-          u
-        ).href;
+        url =
+          new URL(
+            r.headers.get('location'),
+            u
+          ).href;
 
         continue;
       }
@@ -862,17 +1067,25 @@ const {
       if (
         +r.headers.get('content-length') > max
       ) {
-        throw new Error('Fichier trop volumineux.');
+        throw new Error(
+          'Fichier trop volumineux.'
+        );
       }
 
       const chunks = [];
       let total = 0;
 
-      for await (const chunk of r.body) {
+      for await (
+        const chunk of r.body
+      ) {
         total += chunk.length;
 
-        if (total > max) {
-          await r.body.cancel().catch(() => {});
+        if (
+          total > max
+        ) {
+          await r.body
+            .cancel()
+            .catch(() => {});
 
           throw new Error(
             'Fichier trop volumineux.'
@@ -882,7 +1095,9 @@ const {
         chunks.push(chunk);
       }
 
-      return Buffer.concat(chunks);
+      return Buffer.concat(
+        chunks
+      );
     }
 
     throw new Error(
@@ -903,64 +1118,94 @@ const {
       );
     }
 
-    const folder = path.join(
-      dir,
-      'assets',
-      activityId
+    const folder =
+      path.join(
+        dir,
+        'assets',
+        activityId
+      );
+
+    await fs.mkdir(
+      folder,
+      {
+        recursive: true,
+        mode: 0o700,
+      }
     );
 
-    await fs.mkdir(folder, {
-      recursive: true,
-      mode: 0o700,
-    });
-
-    const bytes = await download(
-      attachment.url
-    );
+    const bytes =
+      await download(
+        attachment.url
+      );
 
     const files = [];
 
     try {
-      if (kind === 'artist') {
-        const image = await sharp(bytes, {
-          limitInputPixels: 30000000,
-        })
-          .rotate()
-          .resize(960, 640, {
-            fit: 'cover',
-          })
-          .removeAlpha()
-          .png()
-          .toBuffer();
+      if (
+        kind === 'artist'
+      ) {
+        const image =
+          await sharp(
+            bytes,
+            {
+              limitInputPixels:
+                30000000,
+            }
+          )
+            .rotate()
+            .resize(
+              960,
+              640,
+              {
+                fit: 'cover',
+              }
+            )
+            .removeAlpha()
+            .png()
+            .toBuffer();
 
-        for (let i = 0; i < 3; i++) {
+        for (
+          let i = 0;
+          i < 3;
+          i++
+        ) {
           const small =
             config.artist.pixels[i];
 
-          const file = path.join(
-            folder,
-            `portrait-${i}.png`
-          );
+          const file =
+            path.join(
+              folder,
+              `portrait-${i}.png`
+            );
 
           await sharp(image)
             .resize(
               small,
-              Math.round(small * 2 / 3)
+              Math.round(
+                small * 2 / 3
+              )
             )
-            .resize(960, 640, {
-              kernel: 'nearest',
-            })
-            .blur(config.artist.sigma[i])
+            .resize(
+              960,
+              640,
+              {
+                kernel: 'nearest',
+              }
+            )
+            .blur(
+              config.artist.sigma[i]
+            )
             .png()
             .toFile(file);
 
           files.push(file);
         }
 
-        const original = path.join(
-          folder,
-          'solution.png'
-        );
+        const original =
+          path.join(
+            folder,
+            'solution.png'
+          );
 
         await fs.writeFile(
           original,
@@ -973,10 +1218,11 @@ const {
         };
       }
 
-      const source = path.join(
-        folder,
-        'source'
-      );
+      const source =
+        path.join(
+          folder,
+          'source'
+        );
 
       await fs.writeFile(
         source,
@@ -987,7 +1233,9 @@ const {
 
       try {
         await run(
-          process.env.FFMPEG_PATH || 'ffmpeg',
+          process.env.FFMPEG_PATH ||
+            'ffmpeg',
+
           [
             '-hide_banner',
             '-protocol_whitelist',
@@ -995,15 +1243,20 @@ const {
             '-i',
             source,
           ],
+
           {
             timeout: 15000,
-            maxBuffer: 1024 * 1024,
+            maxBuffer:
+              1024 * 1024,
           }
         );
       } catch (e) {
-        probe = e.stderr || '';
+        probe =
+          e.stderr || '';
 
-        if (e.code === 'ENOENT') {
+        if (
+          e.code === 'ENOENT'
+        ) {
           throw new Error(
             'FFmpeg manque : utilise le Dockerfile fourni sur Railway.'
           );
@@ -1013,13 +1266,19 @@ const {
       const m =
         /Duration: (\d+):(\d+):([\d.]+)/.exec(probe);
 
-      const length = m
-        ? +m[1] * 3600 + +m[2] * 60 + +m[3]
-        : 0;
+      const length =
+        m
+          ? +m[1] * 3600 +
+            +m[2] * 60 +
+            +m[3]
+          : 0;
 
       if (
         length <
-        offset + Math.max(...config.blind.durations)
+        offset +
+          Math.max(
+            ...config.blind.durations
+          )
       ) {
         throw new Error(
           'Le fichier audio est trop court ' +
@@ -1027,14 +1286,21 @@ const {
         );
       }
 
-      for (let i = 0; i < 3; i++) {
-        const file = path.join(
-          folder,
-          `extrait-${i}.mp3`
-        );
+      for (
+        let i = 0;
+        i < 3;
+        i++
+      ) {
+        const file =
+          path.join(
+            folder,
+            `extrait-${i}.mp3`
+          );
 
         await run(
-          process.env.FFMPEG_PATH || 'ffmpeg',
+          process.env.FFMPEG_PATH ||
+            'ffmpeg',
+
           [
             '-nostdin',
             '-hide_banner',
@@ -1048,7 +1314,9 @@ const {
             '-i',
             source,
             '-t',
-            String(config.blind.durations[i]),
+            String(
+              config.blind.durations[i]
+            ),
             '-map',
             '0:a:0',
             '-vn',
@@ -1068,23 +1336,32 @@ const {
             '0',
             file,
           ],
+
           {
             timeout: 45000,
-            maxBuffer: 1024 * 1024,
+            maxBuffer:
+              1024 * 1024,
           }
         );
 
         files.push(file);
       }
 
-      await fs.unlink(source);
+      await fs.unlink(
+        source
+      );
 
-      return { files };
+      return {
+        files,
+      };
     } catch (e) {
-      await fs.rm(folder, {
-        recursive: true,
-        force: true,
-      });
+      await fs.rm(
+        folder,
+        {
+          recursive: true,
+          force: true,
+        }
+      );
 
       throw e;
     }
@@ -1108,18 +1385,31 @@ const {
     progress = 0
   ) {
     title = esc(
-      String(title).slice(0, 55)
+      String(title).slice(
+        0,
+        55
+      )
     );
 
     subtitle = esc(
-      String(subtitle).slice(0, 105)
+      String(subtitle).slice(
+        0,
+        105
+      )
     );
 
     let bars = '';
 
-    for (let i = 0; i < 45; i++) {
+    for (
+      let i = 0;
+      i < 45;
+      i++
+    ) {
       const h =
-        25 + Math.abs(Math.sin(i * 1.8)) * 105;
+        25 +
+        Math.abs(
+          Math.sin(i * 1.8)
+        ) * 105;
 
       bars +=
         `<rect x="${65 + i * 19}" ` +
@@ -1188,12 +1478,9 @@ const {
   };
 })();
 
-// ============================================================
-// OUTILS DISCORD
-// ============================================================
-
 const row = (...x) =>
-  new ActionRowBuilder().addComponents(x);
+  new ActionRowBuilder()
+    .addComponents(x);
 
 const btn = (
   customId,
@@ -1201,10 +1488,11 @@ const btn = (
   style = ButtonStyle.Secondary,
   emoji
 ) => {
-  const b = new ButtonBuilder()
-    .setCustomId(customId)
-    .setLabel(label)
-    .setStyle(style);
+  const b =
+    new ButtonBuilder()
+      .setCustomId(customId)
+      .setLabel(label)
+      .setStyle(style);
 
   if (emoji) {
     b.setEmoji(emoji);
@@ -1215,24 +1503,38 @@ const btn = (
 
 const emb = () =>
   new EmbedBuilder()
-    .setColor(config.color)
+    .setColor(
+      config.color
+    )
     .setFooter({
-      text: config.name,
+      text:
+        config.name,
     });
 
 const safe = s =>
   String(s)
-    .replace(/([\\`*_~|>])/g, '\\$1')
-    .replace(/@/g, '@\u200b');
+    .replace(
+      /([\\`*_~|>])/g,
+      '\\$1'
+    )
+    .replace(
+      /@/g,
+      '@\u200b'
+    );
 
 const kindName = {
-  blind: '🎧 Blind test',
-  artist: '👀 Qui est-ce ?',
-  quiz: '🧠 Quiz',
+  blind:
+    '🎧 Blind test',
+  artist:
+    '👀 Qui est-ce ?',
+  quiz:
+    '🧠 Quiz',
 };
 
 const unix = t =>
-  Math.floor(t / 1000);
+  Math.floor(
+    t / 1000
+  );
 
 const txtOpt = (
   o,
@@ -1243,7 +1545,9 @@ const txtOpt = (
   o.addStringOption(x =>
     x
       .setName(name)
-      .setDescription(description)
+      .setDescription(
+        description
+      )
       .setMaxLength(
         name === 'texte'
           ? 3000
@@ -1253,28 +1557,29 @@ const txtOpt = (
               ? 1500
               : 500
       )
-      .setRequired(required)
+      .setRequired(
+        required
+      )
   );
 
-// ============================================================
-// COMMANDES
-// ============================================================
-
 function commands() {
-  const root = new SlashCommandBuilder()
-    .setName('sacem')
-    .setDescription(
-      'Les animations et le classement SACEM'
-    )
-    .setDefaultMemberPermissions(
-      PermissionFlagsBits.ManageGuild
-    );
+  const root =
+    new SlashCommandBuilder()
+      .setName('sacem')
+      .setDescription(
+        'Les animations et le classement SACEM'
+      )
+      .setDefaultMemberPermissions(
+        PermissionFlagsBits.ManageGuild
+      );
 
-  for (const [name, kind] of [
-    ['blind', 'blind'],
-    ['portrait', 'artist'],
-    ['quiz', 'quiz'],
-  ]) {
+  for (
+    const [name, kind] of [
+      ['blind', 'blind'],
+      ['portrait', 'artist'],
+      ['quiz', 'quiz'],
+    ]
+  ) {
     root.addSubcommand(o => {
       o
         .setName(name)
@@ -1292,7 +1597,9 @@ function commands() {
       o.addChannelOption(x =>
         x
           .setName('salon')
-          .setDescription('Salon où publier')
+          .setDescription(
+            'Salon où publier'
+          )
           .addChannelTypes(0)
           .setRequired(true)
       );
@@ -1304,7 +1611,9 @@ function commands() {
         true
       );
 
-      if (kind !== 'quiz') {
+      if (
+        kind !== 'quiz'
+      ) {
         txtOpt(
           o,
           'reponses',
@@ -1336,7 +1645,9 @@ function commands() {
         'Introduction personnalisée facultative'
       );
 
-      if (kind === 'blind') {
+      if (
+        kind === 'blind'
+      ) {
         o.addNumberOption(x =>
           x
             .setName('depart')
@@ -1348,7 +1659,9 @@ function commands() {
         );
       }
 
-      if (kind === 'quiz') {
+      if (
+        kind === 'quiz'
+      ) {
         o.addAttachmentOption(x =>
           x
             .setName('questions')
@@ -1382,29 +1695,34 @@ function commands() {
       true
     );
 
-    for (const [name, description] of [
-      ['titre', 'Nouveau titre'],
-      [
-        'texte',
-        'Nouveau texte ; écrire - pour remettre le texte par défaut',
-      ],
-      [
-        'publication',
-        'Nouvelle date avant publication, AAAA-MM-JJ HH:mm',
-      ],
-      [
-        'cloture',
-        'Nouvelle clôture, AAAA-MM-JJ HH:mm',
-      ],
-      [
-        'reponses',
-        'Nouvelles réponses séparées par |',
-      ],
-      [
-        'lien',
-        'Lien source ; - pour enlever',
-      ],
-    ]) {
+    for (
+      const [name, description] of [
+        [
+          'titre',
+          'Nouveau titre',
+        ],
+        [
+          'texte',
+          'Nouveau texte ; écrire - pour remettre le texte par défaut',
+        ],
+        [
+          'publication',
+          'Nouvelle date avant publication, AAAA-MM-JJ HH:mm',
+        ],
+        [
+          'cloture',
+          'Nouvelle clôture, AAAA-MM-JJ HH:mm',
+        ],
+        [
+          'reponses',
+          'Nouvelles réponses séparées par |',
+        ],
+        [
+          'lien',
+          'Lien source ; - pour enlever',
+        ],
+      ]
+    ) {
       txtOpt(
         o,
         name,
@@ -1450,24 +1768,28 @@ function commands() {
     return o;
   });
 
-  for (const [name, description] of [
-    [
-      'fermer',
-      'Fermer immédiatement les participations',
-    ],
-    [
-      'supprimer',
-      'Annuler une animation sans effacer les points',
-    ],
-    [
-      'reveler',
-      'Publier la solution après la clôture',
-    ],
-  ]) {
+  for (
+    const [name, description] of [
+      [
+        'fermer',
+        'Fermer immédiatement les participations',
+      ],
+      [
+        'supprimer',
+        'Annuler une animation sans effacer les points',
+      ],
+      [
+        'reveler',
+        'Publier la solution après la clôture',
+      ],
+    ]
+  ) {
     root.addSubcommand(o => {
       o
         .setName(name)
-        .setDescription(description);
+        .setDescription(
+          description
+        );
 
       return txtOpt(
         o,
@@ -1496,7 +1818,9 @@ function commands() {
     return o.addChannelOption(x =>
       x
         .setName('salon')
-        .setDescription('Salon du menu')
+        .setDescription(
+          'Salon du menu'
+        )
         .addChannelTypes(0)
         .setRequired(true)
     );
@@ -1573,14 +1897,21 @@ function commands() {
 
   addLootboxCommand(root);
 
+  const lootboxCommand =
+    new SlashCommandBuilder()
+      .setName('lootbox')
+      .setDescription(
+        'Configurer les coffres quotidiens SACEM'
+      )
+      .setDefaultMemberPermissions(
+        PermissionFlagsBits.ManageGuild
+      );
+
   return [
     root.toJSON(),
+    lootboxCommand.toJSON(),
   ];
 }
-
-// ============================================================
-// MESSAGES PUBLICS ET CLASSEMENT
-// ============================================================
 
 function publicPayload(a) {
   const closed =
@@ -1588,19 +1919,27 @@ function publicPayload(a) {
     a.status === 'cancelled' ||
     Date.now() >= a.close;
 
-  const e = emb()
-    .setTitle(a.title)
-    .setDescription(
-      (a.text || config.text[a.kind]) +
-      `\n\n⏰ Fin : <t:${unix(a.close)}:F>` +
-      `\n🏆 Classement : **${safe(a.season)}**`
-    )
-    .setFooter({
-      text:
-        `${config.name} · ID ${a.id}`,
-    });
+  const e =
+    emb()
+      .setTitle(
+        a.title
+      )
+      .setDescription(
+        (
+          a.text ||
+          config.text[a.kind]
+        ) +
+        `\n\n⏰ Fin : <t:${unix(a.close)}:F>` +
+        `\n🏆 Classement : **${safe(a.season)}**`
+      )
+      .setFooter({
+        text:
+          `${config.name} · ID ${a.id}`,
+      });
 
-  if (a.status === 'cancelled') {
+  if (
+    a.status === 'cancelled'
+  ) {
     e.setDescription(
       'Cette animation a été annulée. ' +
       'Les points déjà attribués sont conservés.'
@@ -1618,43 +1957,47 @@ function publicPayload(a) {
 
     if (a.link) {
       e.addFields({
-        name: 'Pour aller plus loin',
+        name:
+          'Pour aller plus loin',
+
         value:
           `[Découvrir la source](${a.link})`,
       });
     }
-  } else if (closed) {
+  } else if (
+    closed
+  ) {
     e.setDescription(
       'Les participations sont fermées. La solution arrive.'
     );
   }
 
-  const components = [
-    row(
-      btn(
-        `play:${a.id}`,
-        'Participer',
-        ButtonStyle.Primary,
-        a.kind === 'blind'
-          ? '🎧'
-          : a.kind === 'artist'
-            ? '👀'
-            : '🧠'
-      ).setDisabled(closed),
-
-      btn(
-        'rank',
-        'Classement',
-        ButtonStyle.Secondary,
-        '🏆'
-      )
-    ),
-  ];
-
   return {
     content: '',
     embeds: [e],
-    components,
+
+    components: [
+      row(
+        btn(
+          `play:${a.id}`,
+          'Participer',
+          ButtonStyle.Primary,
+          a.kind === 'blind'
+            ? '🎧'
+            : a.kind === 'artist'
+              ? '👀'
+              : '🧠'
+        ).setDisabled(closed),
+
+        btn(
+          'rank',
+          'Classement',
+          ButtonStyle.Secondary,
+          '🏆'
+        )
+      ),
+    ],
+
     allowedMentions: {
       parse: [],
     },
@@ -1673,29 +2016,33 @@ function rankPayload(
   const rows =
     store.ranking(season);
 
-  const lines = rows
-    .slice(0, 20)
-    .map(x => {
-      const position =
-        x.rank < 4
-          ? ['🥇', '🥈', '🥉'][x.rank - 1]
-          : `**${x.rank}.**`;
+  const lines =
+    rows
+      .slice(0, 20)
+      .map(x => {
+        const position =
+          x.rank < 4
+            ? ['🥇', '🥈', '🥉'][x.rank - 1]
+            : `**${x.rank}.**`;
 
-      return (
-        `${position} <@${x.user}> · ` +
-        `**${x.points} pts**`
-      );
-    });
+        return (
+          `${position} <@${x.user}> · ` +
+          `**${x.points} pts**`
+        );
+      });
 
-  const own = rows.find(
-    x => x.user === user
-  );
+  const own =
+    rows.find(
+      x => x.user === user
+    );
 
   if (
     own &&
     !rows
       .slice(0, 20)
-      .some(x => x.user === user)
+      .some(
+        x => x.user === user
+      )
   ) {
     lines.push(
       `\n**${own.rank}.** <@${own.user}> · ` +
@@ -1720,25 +2067,30 @@ function rankPayload(
         })
         .setTimestamp(),
     ],
+
     components: [],
+
     allowedMentions: {
       parse: [],
     },
   };
 }
 
-// ============================================================
-// MESSAGES DE JEU ÉPHÉMÈRES
-// ============================================================
-
-async function gamePayload(a, s) {
-  const e = emb()
-    .setTitle(a.title);
+async function gamePayload(
+  a,
+  s
+) {
+  const e =
+    emb().setTitle(
+      a.title
+    );
 
   let components = [];
   let files = [];
 
-  if (s.phase === 'finished') {
+  if (
+    s.phase === 'finished'
+  ) {
     e.setDescription(
       a.kind === 'quiz'
         ? '🏁 **Quiz terminé !**\n\n' +
@@ -1757,6 +2109,7 @@ async function gamePayload(a, s) {
     return {
       content: '',
       embeds: [e],
+
       components: [
         row(
           btn(
@@ -1767,18 +2120,24 @@ async function gamePayload(a, s) {
           )
         ),
       ],
+
       attachments: [],
+
       allowedMentions: {
         parse: [],
       },
     };
   }
 
-  if (a.kind === 'quiz') {
+  if (
+    a.kind === 'quiz'
+  ) {
     const q =
       a.questions[s.index];
 
-    if (s.phase === 'feedback') {
+    if (
+      s.phase === 'feedback'
+    ) {
       const feedback =
         s.last.timeout
           ? '⏱️ Temps écoulé.'
@@ -1818,18 +2177,21 @@ async function gamePayload(a, s) {
 
       components = [
         row(
-          ...q.choices.map((c, i) =>
-            btn(
-              `choice:${a.id}:${s.index}:${i}`,
-              c,
-              ButtonStyle.Primary
-            )
+          ...q.choices.map(
+            (c, i) =>
+              btn(
+                `choice:${a.id}:${s.index}:${i}`,
+                c,
+                ButtonStyle.Primary
+              )
           )
         ),
       ];
     }
   } else {
-    const stage = s.stage;
+    const stage =
+      s.stage;
+
     const timeout =
       s.phase === 'timeout';
 
@@ -1860,12 +2222,16 @@ async function gamePayload(a, s) {
 
     files = [
       new AttachmentBuilder(
-        await fs.readFile(file),
+        await fs.readFile(
+          file
+        ),
         { name }
       ),
     ];
 
-    if (a.kind === 'artist') {
+    if (
+      a.kind === 'artist'
+    ) {
       e.setImage(
         `attachment://${name}`
       );
@@ -1878,7 +2244,9 @@ async function gamePayload(a, s) {
           'Répondre',
           ButtonStyle.Primary,
           '✍️'
-        ).setDisabled(timeout),
+        ).setDisabled(
+          timeout
+        ),
 
         btn(
           `stage:${a.id}:${stage}`,
@@ -1902,23 +2270,24 @@ async function gamePayload(a, s) {
     components,
     files,
     attachments: [],
+
     allowedMentions: {
       parse: [],
     },
   };
 }
 
-// ============================================================
-// DÉMARRAGE
-// ============================================================
-
 async function main() {
-  for (const key of [
-    'DISCORD_TOKEN',
-    'DISCORD_CLIENT_ID',
-    'DISCORD_GUILD_ID',
-  ]) {
-    if (!process.env[key]) {
+  for (
+    const key of [
+      'DISCORD_TOKEN',
+      'DISCORD_CLIENT_ID',
+      'DISCORD_GUILD_ID',
+    ]
+  ) {
+    if (
+      !process.env[key]
+    ) {
       throw new Error(
         `Variable manquante : ${key}`
       );
@@ -1927,7 +2296,10 @@ async function main() {
 
   const dir =
     process.env.DATA_DIR ||
-    path.join(__dirname, 'data');
+    path.join(
+      __dirname,
+      'data'
+    );
 
   if (
     process.env.RAILWAY_ENVIRONMENT_ID &&
@@ -1960,38 +2332,48 @@ async function main() {
   const engine =
     new Engine(store);
 
-  const client = new Client({
-    intents: [
-      GatewayIntentBits.Guilds,
-    ],
-    allowedMentions: {
-      parse: [],
-    },
-  });
+  const client =
+    new Client({
+      intents: [
+        GatewayIntentBits.Guilds,
+      ],
+
+      allowedMentions: {
+        parse: [],
+      },
+    });
 
   const lootEnabled =
     process.env.ENABLE_LOOTBOX === 'true';
 
-  const locks = new Map();
-  const timers = new Map();
+  const locks =
+    new Map();
+
+  const timers =
+    new Map();
 
   let dirty = 1;
   let working = false;
   let stopping = false;
 
-  const lootbox = createLootbox({
-    store,
-    engine,
-    dir,
-    enabled: lootEnabled,
-    download,
+  const lootbox =
+    createLootbox({
+      store,
+      engine,
+      dir,
+      enabled:
+        lootEnabled,
+      download,
 
-    onAward: () => {
-      dirty++;
-    },
-  });
+      onAward: () => {
+        dirty++;
+      },
+    });
 
-  const queue = (key, fn) => {
+  const queue = (
+    key,
+    fn
+  ) => {
     const p = (
       locks.get(key) ||
       Promise.resolve()
@@ -1999,10 +2381,15 @@ async function main() {
       .catch(() => {})
       .then(fn);
 
-    locks.set(key, p);
+    locks.set(
+      key,
+      p
+    );
 
     p.finally(() => {
-      if (locks.get(key) === p) {
+      if (
+        locks.get(key) === p
+      ) {
         locks.delete(key);
       }
     }).catch(() => {});
@@ -2021,17 +2408,15 @@ async function main() {
           process.env.ADMIN_ROLE_ID
         ) ||
         (
-          Array.isArray(i.member?.roles) &&
+          Array.isArray(
+            i.member?.roles
+          ) &&
           i.member.roles.includes(
             process.env.ADMIN_ROLE_ID
           )
         )
       )
     );
-
-  // ----------------------------------------------------------
-  // MISE À JOUR D’UN MESSAGE PUBLIC
-  // ----------------------------------------------------------
 
   const update = async aid => {
     const a =
@@ -2058,9 +2443,12 @@ async function main() {
     ) {
       payload.files = [
         new AttachmentBuilder(
-          await fs.readFile(a.original),
+          await fs.readFile(
+            a.original
+          ),
           {
-            name: 'solution.png',
+            name:
+              'solution.png',
           }
         ),
       ];
@@ -2069,7 +2457,8 @@ async function main() {
         'attachment://solution.png'
       );
     } else {
-      const name = 'studio.png';
+      const name =
+        'studio.png';
 
       payload.files = [
         new AttachmentBuilder(
@@ -2092,12 +2481,13 @@ async function main() {
     );
   };
 
-  // ----------------------------------------------------------
-  // INFORMATIONS STAFF
-  // ----------------------------------------------------------
-
-  const note = async (a, event) => {
-    if (!process.env.STAFF_CHANNEL_ID) {
+  const note = async (
+    a,
+    event
+  ) => {
+    if (
+      !process.env.STAFF_CHANNEL_ID
+    ) {
       return;
     }
 
@@ -2110,7 +2500,9 @@ async function main() {
       await ch.send({
         embeds: [
           emb()
-            .setTitle(event)
+            .setTitle(
+              event
+            )
             .setDescription(
               `**${safe(a.title)}**\n` +
               `ID : \`${a.id}\`\n` +
@@ -2121,6 +2513,7 @@ async function main() {
               `Saison : ${safe(a.season)}`
             ),
         ],
+
         allowedMentions: {
           parse: [],
         },
@@ -2133,43 +2526,50 @@ async function main() {
     }
   };
 
-  // ----------------------------------------------------------
-  // PUBLICATION PROGRAMMÉE
-  // ----------------------------------------------------------
-
   const publish = async a => {
     const channel =
       await client.channels.fetch(
         a.channel
       );
 
-    if (a.status === 'publishing') {
+    if (
+      a.status === 'publishing'
+    ) {
       const recent =
         await channel.messages.fetch({
           limit: 50,
         });
 
-      const found = recent.find(
-        m =>
-          m.author.id === client.user.id &&
-          m.embeds.some(e =>
-            e.footer?.text?.endsWith(
-              `ID ${a.id}`
+      const found =
+        recent.find(
+          m =>
+            m.author.id === client.user.id &&
+            m.embeds.some(
+              e =>
+                e.footer?.text?.endsWith(
+                  `ID ${a.id}`
+                )
             )
-          )
-      );
+        );
 
       if (found) {
-        a.message = found.id;
-        a.status = 'published';
-        a.error = null;
+        a.message =
+          found.id;
+
+        a.status =
+          'published';
+
+        a.error =
+          null;
 
         store.save(a);
         return;
       }
     }
 
-    a.status = 'publishing';
+    a.status =
+      'publishing';
+
     store.save(a);
 
     const payload =
@@ -2182,7 +2582,8 @@ async function main() {
           kindName[a.kind]
         ),
         {
-          name: 'studio.png',
+          name:
+            'studio.png',
         }
       ),
     ];
@@ -2194,13 +2595,20 @@ async function main() {
     const message =
       await channel.send({
         ...payload,
-        nonce: a.id,
-        enforceNonce: true,
+        nonce:
+          a.id,
+        enforceNonce:
+          true,
       });
 
-    a.message = message.id;
-    a.status = 'published';
-    a.error = null;
+    a.message =
+      message.id;
+
+    a.status =
+      'published';
+
+    a.error =
+      null;
 
     store.save(a);
 
@@ -2209,10 +2617,6 @@ async function main() {
       'Animation publiée'
     );
   };
-
-  // ----------------------------------------------------------
-  // PROGRAMMATION ET ACTUALISATION DU CLASSEMENT
-  // ----------------------------------------------------------
 
   const tick = async () => {
     if (
@@ -2226,12 +2630,16 @@ async function main() {
     working = true;
 
     try {
-      for (const original of store.all()) {
+      for (
+        const original of store.all()
+      ) {
         await queue(
           `admin:${original.id}`,
           async () => {
             const a =
-              store.activity(original.id);
+              store.activity(
+                original.id
+              );
 
             if (
               [
@@ -2240,7 +2648,8 @@ async function main() {
               ].includes(a.status) &&
               Date.now() >= a.close
             ) {
-              a.status = 'closed';
+              a.status =
+                'closed';
 
               a.error =
                 'La date de clôture est passée avant publication.';
@@ -2279,13 +2688,18 @@ async function main() {
               a.status === 'published' &&
               Date.now() >= a.close
             ) {
-              a.status = 'closed';
-              a.revealed = true;
+              a.status =
+                'closed';
+
+              a.revealed =
+                true;
 
               store.save(a);
 
               try {
-                await update(a.id);
+                await update(
+                  a.id
+                );
               } catch (e) {
                 console.error(
                   'Clôture :',
@@ -2299,7 +2713,8 @@ async function main() {
       }
 
       if (dirty) {
-        const version = dirty;
+        const version =
+          dirty;
 
         for (
           const b of
@@ -2323,7 +2738,9 @@ async function main() {
           }
         }
 
-        if (dirty === version) {
+        if (
+          dirty === version
+        ) {
           dirty = 0;
         }
       }
@@ -2332,11 +2749,11 @@ async function main() {
     }
   };
 
-  // ----------------------------------------------------------
-  // AFFICHAGE ET CHRONOMÈTRE DES PARTICIPATIONS
-  // ----------------------------------------------------------
-
-  const render = async (i, a, s) => {
+  const render = async (
+    i,
+    a,
+    s
+  ) => {
     if (
       a.kind !== 'quiz' &&
       s.phase === 'timeout' &&
@@ -2352,7 +2769,9 @@ async function main() {
     const key =
       `${a.id}:${s.user}`;
 
-    if (timers.has(key)) {
+    if (
+      timers.has(key)
+    ) {
       clearTimeout(
         timers.get(key)
       );
@@ -2361,111 +2780,129 @@ async function main() {
     }
 
     await i.editReply(
-      await gamePayload(a, s)
+      await gamePayload(
+        a,
+        s
+      )
     );
 
-    if (s.phase === 'playing') {
+    if (
+      s.phase === 'playing'
+    ) {
       const index =
         a.kind === 'quiz'
           ? s.index
           : s.stage;
 
-      const timer = setTimeout(
-        () =>
-          queue(key, async () => {
-            const current =
-              store.session(
-                a.id,
-                s.user
-              );
+      const timer =
+        setTimeout(
+          () =>
+            queue(
+              key,
+              async () => {
+                const current =
+                  store.session(
+                    a.id,
+                    s.user
+                  );
 
-            if (
-              !current ||
-              current.phase !== 'playing' ||
-              (
-                a.kind === 'quiz'
-                  ? current.index
-                  : current.stage
-              ) !== index
-            ) {
-              return;
-            }
+                if (
+                  !current ||
+                  current.phase !== 'playing' ||
+                  (
+                    a.kind === 'quiz'
+                      ? current.index
+                      : current.stage
+                  ) !== index
+                ) {
+                  return;
+                }
 
-            const fresh =
-              engine.get(
-                a.id,
-                s.user
-              );
+                const fresh =
+                  engine.get(
+                    a.id,
+                    s.user
+                  );
 
-            if (
-              fresh.phase !== 'playing'
-            ) {
-              try {
-                await render(
-                  i,
-                  store.activity(a.id),
-                  fresh
-                );
-              } catch {}
-            }
-          }).catch(() => {}),
-        Math.max(
-          1,
-          s.deadline - Date.now() + 30
-        )
-      );
+                if (
+                  fresh.phase !== 'playing'
+                ) {
+                  try {
+                    await render(
+                      i,
+                      store.activity(a.id),
+                      fresh
+                    );
+                  } catch {}
+                }
+              }
+            ).catch(() => {}),
+
+          Math.max(
+            1,
+            s.deadline - Date.now() + 30
+          )
+        );
 
       timer.unref();
-      timers.set(key, timer);
+
+      timers.set(
+        key,
+        timer
+      );
     }
   };
 
-  const questions = async attachment =>
-    validateQuestions(
-      attachment
-        ? JSON.parse(
-            (
-              await download(
-                attachment.url,
-                200000
-              )
-            ).toString('utf8')
-          )
-        : JSON.parse(
-            await fs.readFile(
-              path.join(
-                __dirname,
-                'questions-exemple.json'
-              ),
-              'utf8'
+  const questions =
+    async attachment =>
+      validateQuestions(
+        attachment
+          ? JSON.parse(
+              (
+                await download(
+                  attachment.url,
+                  200000
+                )
+              ).toString('utf8')
             )
-          )
-    );
+          : JSON.parse(
+              await fs.readFile(
+                path.join(
+                  __dirname,
+                  'questions-exemple.json'
+                ),
+                'utf8'
+              )
+            )
+      );
 
   const parseAnswers = s =>
     s
       .split('|')
-      .map(x => x.trim())
+      .map(
+        x => x.trim()
+      )
       .filter(Boolean)
       .slice(0, 30);
 
-  // ----------------------------------------------------------
-  // TRAITEMENT DES COMMANDES STAFF
-  // ----------------------------------------------------------
-
   async function command(i) {
-    if (!staff(i)) {
+    if (
+      !staff(i)
+    ) {
       throw new Error(
         'Cette commande est réservée au staff.'
       );
     }
 
     await i.deferReply({
-      flags: MessageFlags.Ephemeral,
+      flags:
+        MessageFlags.Ephemeral,
     });
 
     const sub =
-      i.options.getSubcommand();
+      i.commandName === 'lootbox'
+        ? 'lootbox'
+        : i.options.getSubcommand();
 
     const str = n =>
       i.options.getString(n);
@@ -2473,10 +2910,13 @@ async function main() {
     const att = n =>
       i.options.getAttachment(n);
 
-    if (sub === 'lootbox') {
+    if (
+      sub === 'lootbox'
+    ) {
       return queue(
         'lootbox-config',
-        () => lootbox.configure(i)
+        () =>
+          lootbox.configure(i)
       );
     }
 
@@ -2492,15 +2932,20 @@ async function main() {
           ? 'artist'
           : sub;
 
-      const aid = id();
+      const aid =
+        id();
 
       const open =
         str('publication')
-          ? parisDate(str('publication'))
+          ? parisDate(
+              str('publication')
+            )
           : Date.now();
 
       const close =
-        parisDate(str('cloture'));
+        parisDate(
+          str('cloture')
+        );
 
       if (
         close <= open ||
@@ -2512,7 +2957,8 @@ async function main() {
         );
       }
 
-      const link = str('lien');
+      const link =
+        str('lien');
 
       if (
         link &&
@@ -2526,9 +2972,10 @@ async function main() {
       const media =
         kind === 'quiz'
           ? {
-              questions: await questions(
-                att('questions')
-              ),
+              questions:
+                await questions(
+                  att('questions')
+                ),
             }
           : await prepare(
               kind,
@@ -2538,25 +2985,36 @@ async function main() {
               dir
             );
 
-      const a = engine.create({
-        id: aid,
-        title: str('titre'),
-        kind,
-        channel:
-          i.options.getChannel('salon').id,
-        open,
-        close,
-        text: str('texte') || '',
+      const a =
+        engine.create({
+          id: aid,
 
-        answers:
-          kind === 'quiz'
-            ? []
-            : parseAnswers(str('reponses')),
+          title:
+            str('titre'),
 
-        link: link || null,
+          kind,
 
-        ...media,
-      });
+          channel:
+            i.options.getChannel('salon').id,
+
+          open,
+          close,
+
+          text:
+            str('texte') || '',
+
+          answers:
+            kind === 'quiz'
+              ? []
+              : parseAnswers(
+                  str('reponses')
+                ),
+
+          link:
+            link || null,
+
+          ...media,
+        });
 
       await note(
         a,
@@ -2586,11 +3044,14 @@ async function main() {
       });
     }
 
-    if (sub === 'installer') {
+    if (
+      sub === 'installer'
+    ) {
       const ch =
         i.options.getChannel('salon');
 
-      const file = 'studio.png';
+      const file =
+        'studio.png';
 
       const buttons = [
         btn(
@@ -2615,7 +3076,9 @@ async function main() {
         ),
       ];
 
-      if (lootEnabled) {
+      if (
+        lootEnabled
+      ) {
         buttons.push(
           btn(
             'loot',
@@ -2647,7 +3110,8 @@ async function main() {
               'Blind test · Quiz · Qui est-ce ?'
             ),
             {
-              name: file,
+              name:
+                file,
             }
           ),
         ],
@@ -2666,7 +3130,9 @@ async function main() {
       );
     }
 
-    if (sub === 'classement') {
+    if (
+      sub === 'classement'
+    ) {
       const ch =
         i.options.getChannel('salon');
 
@@ -2680,7 +3146,9 @@ async function main() {
         );
       }
 
-      if (str('saison')) {
+      if (
+        str('saison')
+      ) {
         throw new Error(
           'Pour publier un classement actualisé, ' +
           'ne renseigne pas saison.'
@@ -2696,8 +3164,10 @@ async function main() {
         store.setting('boards') || [];
 
       boards.push({
-        channel: ch.id,
-        message: msg.id,
+        channel:
+          ch.id,
+        message:
+          msg.id,
       });
 
       store.setting(
@@ -2711,15 +3181,23 @@ async function main() {
       );
     }
 
-    if (sub === 'export') {
+    if (
+      sub === 'export'
+    ) {
       const season =
         str('saison') ||
         store.setting('season');
 
       const cell = v =>
         `"${String(v)
-          .replace(/^[=+\-@]/, "'$&")
-          .replace(/"/g, '""')}"`;
+          .replace(
+            /^[=+\-@]/,
+            "'$&"
+          )
+          .replace(
+            /"/g,
+            '""'
+          )}"`;
 
       const csv =
         '\uFEFF' +
@@ -2740,8 +3218,9 @@ async function main() {
               x.points,
             ]),
         ]
-          .map(r =>
-            r.map(cell).join(';')
+          .map(
+            r =>
+              r.map(cell).join(';')
           )
           .join('\r\n');
 
@@ -2753,14 +3232,17 @@ async function main() {
           new AttachmentBuilder(
             Buffer.from(csv),
             {
-              name: 'classement-sacem.csv',
+              name:
+                'classement-sacem.csv',
             }
           ),
         ],
       });
     }
 
-    if (sub === 'saison') {
+    if (
+      sub === 'saison'
+    ) {
       if (
         !i.options.getBoolean('confirmer')
       ) {
@@ -2780,7 +3262,9 @@ async function main() {
             a.close > Date.now()
         );
 
-      if (active.length) {
+      if (
+        active.length
+      ) {
         throw new Error(
           'Ferme ou annule les animations encore ouvertes ' +
           'ou programmées avant de changer de saison.'
@@ -2813,7 +3297,9 @@ async function main() {
       );
     }
 
-    if (sub === 'liste') {
+    if (
+      sub === 'liste'
+    ) {
       const items =
         store.all()
           .sort(
@@ -2848,11 +3334,15 @@ async function main() {
       });
     }
 
-    if (sub === 'diagnostic') {
+    if (
+      sub === 'diagnostic'
+    ) {
       return i.editReply({
         embeds: [
           emb()
-            .setTitle('Diagnostic')
+            .setTitle(
+              'Diagnostic'
+            )
             .setDescription(
               `Saison : **${safe(store.setting('season'))}**\n` +
               `Stockage : \`${safe(path.join(dir, 'sacem.sqlite'))}\`\n` +
@@ -2875,7 +3365,9 @@ async function main() {
             str('id')
           );
 
-        if (sub === 'modifier') {
+        if (
+          sub === 'modifier'
+        ) {
           if (
             [
               'closed',
@@ -2907,7 +3399,9 @@ async function main() {
           if (
             i.options.getChannel('salon')
           ) {
-            if (a.message) {
+            if (
+              a.message
+            ) {
               throw new Error(
                 'Le salon ne peut être changé qu’avant publication.'
               );
@@ -2917,8 +3411,12 @@ async function main() {
               i.options.getChannel('salon').id;
           }
 
-          if (str('publication')) {
-            if (a.message) {
+          if (
+            str('publication')
+          ) {
+            if (
+              a.message
+            ) {
               throw new Error(
                 'L’animation est déjà publiée.'
               );
@@ -2930,7 +3428,9 @@ async function main() {
               );
           }
 
-          if (str('cloture')) {
+          if (
+            str('cloture')
+          ) {
             a.close =
               parisDate(
                 str('cloture')
@@ -2946,7 +3446,9 @@ async function main() {
             );
           }
 
-          if (str('titre')) {
+          if (
+            str('titre')
+          ) {
             if (
               str('titre').length > 150
             ) {
@@ -2991,7 +3493,9 @@ async function main() {
           if (
             str('reponses') !== null
           ) {
-            if (a.kind === 'quiz') {
+            if (
+              a.kind === 'quiz'
+            ) {
               throw new Error(
                 'Pour le quiz, utilise le fichier questions.'
               );
@@ -3002,7 +3506,9 @@ async function main() {
                 str('reponses')
               );
 
-            if (!a.answers.length) {
+            if (
+              !a.answers.length
+            ) {
               throw new Error(
                 'Au moins une réponse attendue.'
               );
@@ -3012,7 +3518,9 @@ async function main() {
           if (
             att('questions')
           ) {
-            if (a.kind !== 'quiz') {
+            if (
+              a.kind !== 'quiz'
+            ) {
               throw new Error(
                 'Cette option est réservée aux quiz.'
               );
@@ -3024,8 +3532,12 @@ async function main() {
               );
           }
 
-          if (att('media')) {
-            if (a.kind === 'quiz') {
+          if (
+            att('media')
+          ) {
+            if (
+              a.kind === 'quiz'
+            ) {
               throw new Error(
                 'Un quiz utilise un fichier questions.'
               );
@@ -3060,8 +3572,12 @@ async function main() {
 
           store.save(a);
 
-          if (a.message) {
-            await update(a.id);
+          if (
+            a.message
+          ) {
+            await update(
+              a.id
+            );
           }
 
           await note(
@@ -3074,15 +3590,26 @@ async function main() {
           );
         }
 
-        if (sub === 'fermer') {
-          a.close = Date.now();
-          a.status = 'closed';
-          a.revealed = true;
+        if (
+          sub === 'fermer'
+        ) {
+          a.close =
+            Date.now();
+
+          a.status =
+            'closed';
+
+          a.revealed =
+            true;
 
           store.save(a);
 
-          if (a.message) {
-            await update(a.id);
+          if (
+            a.message
+          ) {
+            await update(
+              a.id
+            );
           }
 
           return i.editReply(
@@ -3091,13 +3618,20 @@ async function main() {
           );
         }
 
-        if (sub === 'supprimer') {
-          a.status = 'cancelled';
+        if (
+          sub === 'supprimer'
+        ) {
+          a.status =
+            'cancelled';
 
           store.save(a);
 
-          if (a.message) {
-            await update(a.id);
+          if (
+            a.message
+          ) {
+            await update(
+              a.id
+            );
           }
 
           return i.editReply(
@@ -3106,7 +3640,9 @@ async function main() {
           );
         }
 
-        if (sub === 'reveler') {
+        if (
+          sub === 'reveler'
+        ) {
           if (
             Date.now() < a.close &&
             a.status !== 'closed'
@@ -3116,12 +3652,17 @@ async function main() {
             );
           }
 
-          a.revealed = true;
+          a.revealed =
+            true;
 
           store.save(a);
 
-          if (a.message) {
-            await update(a.id);
+          if (
+            a.message
+          ) {
+            await update(
+              a.id
+            );
           }
 
           return i.editReply(
@@ -3132,10 +3673,6 @@ async function main() {
     );
   }
 
-  // ----------------------------------------------------------
-  // BOUTONS ET FORMULAIRES DES MEMBRES
-  // ----------------------------------------------------------
-
   async function component(i) {
     const [
       action,
@@ -3144,7 +3681,9 @@ async function main() {
       choice,
     ] = i.customId.split(':');
 
-    if (action === 'respond') {
+    if (
+      action === 'respond'
+    ) {
       const a =
         store.activity(aid);
 
@@ -3171,12 +3710,16 @@ async function main() {
           .setCustomId(
             `answer:${aid}:${step}`
           )
-          .setTitle('Ta réponse');
+          .setTitle(
+            'Ta réponse'
+          );
 
       modal.addComponents(
         row(
           new TextInputBuilder()
-            .setCustomId('answer')
+            .setCustomId(
+              'answer'
+            )
             .setLabel(
               a.kind === 'blind'
                 ? 'Quel est le titre du morceau ?'
@@ -3190,10 +3733,14 @@ async function main() {
         )
       );
 
-      return i.showModal(modal);
+      return i.showModal(
+        modal
+      );
     }
 
-    if (action === 'answer') {
+    if (
+      action === 'answer'
+    ) {
       await i.deferReply({
         flags:
           MessageFlags.Ephemeral,
@@ -3223,7 +3770,9 @@ async function main() {
       i.user.globalName ||
       i.user.username;
 
-    if (action === 'rank') {
+    if (
+      action === 'rank'
+    ) {
       return i.editReply(
         rankPayload(
           store,
@@ -3232,7 +3781,9 @@ async function main() {
       );
     }
 
-    if (action === 'stats') {
+    if (
+      action === 'stats'
+    ) {
       const season =
         store.setting('season');
 
@@ -3278,7 +3829,9 @@ async function main() {
       });
     }
 
-    if (action === 'loot') {
+    if (
+      action === 'loot'
+    ) {
       return lootbox.open(
         i,
         user,
@@ -3286,7 +3839,9 @@ async function main() {
       );
     }
 
-    if (action === 'live') {
+    if (
+      action === 'live'
+    ) {
       const items =
         store.all()
           .filter(
@@ -3327,40 +3882,56 @@ async function main() {
 
         let s;
 
-        if (action === 'play') {
-          s = engine.start(
-            aid,
-            user,
-            name
-          );
-        } else if (action === 'stage') {
-          s = engine.stage(
-            aid,
-            user,
-            +step
-          );
-        } else if (action === 'answer') {
-          s = engine.answer(
-            aid,
-            user,
-            +step,
-            i.fields.getTextInputValue(
-              'answer'
-            )
-          );
-        } else if (action === 'choice') {
-          s = engine.quizAnswer(
-            aid,
-            user,
-            +step,
-            +choice
-          );
-        } else if (action === 'next') {
-          s = engine.quizNext(
-            aid,
-            user,
-            +step
-          );
+        if (
+          action === 'play'
+        ) {
+          s =
+            engine.start(
+              aid,
+              user,
+              name
+            );
+        } else if (
+          action === 'stage'
+        ) {
+          s =
+            engine.stage(
+              aid,
+              user,
+              +step
+            );
+        } else if (
+          action === 'answer'
+        ) {
+          s =
+            engine.answer(
+              aid,
+              user,
+              +step,
+
+              i.fields.getTextInputValue(
+                'answer'
+              )
+            );
+        } else if (
+          action === 'choice'
+        ) {
+          s =
+            engine.quizAnswer(
+              aid,
+              user,
+              +step,
+              +choice
+            );
+        } else if (
+          action === 'next'
+        ) {
+          s =
+            engine.quizNext(
+              aid,
+              user,
+              +step
+            );
         } else {
           throw new Error(
             'Action inconnue.'
@@ -3378,10 +3949,6 @@ async function main() {
     );
   }
 
-  // ----------------------------------------------------------
-  // ÉVÉNEMENTS DISCORD
-  // ----------------------------------------------------------
-
   client.on(
     Events.InteractionCreate,
     async i => {
@@ -3391,14 +3958,31 @@ async function main() {
         (
           !i.isChatInputCommand() &&
           !i.isButton() &&
-          !i.isModalSubmit()
+          !i.isModalSubmit() &&
+          !i.isAnySelectMenu?.()
         )
       ) {
         return;
       }
 
       try {
-        if (i.isChatInputCommand()) {
+        if (
+          /^slb(f)?:/.test(
+            i.customId || ''
+          )
+        ) {
+          if (
+            !staff(i)
+          ) {
+            throw new Error(
+              'Ce panneau est réservé au staff.'
+            );
+          }
+
+          await lootbox.controls(i);
+        } else if (
+          i.isChatInputCommand()
+        ) {
           await command(i);
         } else {
           await component(i);
@@ -3428,12 +4012,14 @@ async function main() {
           ) {
             await i.followUp({
               content,
+
               flags:
                 MessageFlags.Ephemeral,
             });
           } else {
             await i.reply({
               content,
+
               flags:
                 MessageFlags.Ephemeral,
             });
@@ -3451,11 +4037,12 @@ async function main() {
         'Classement commun et stockage actifs.'
       );
 
-      tick().catch(e =>
-        console.error(
-          'Reprise :',
-          e.code || e.name
-        )
+      tick().catch(
+        e =>
+          console.error(
+            'Reprise :',
+            e.code || e.name
+          )
       );
     }
   );
@@ -3469,16 +4056,18 @@ async function main() {
       )
   );
 
-  const interval = setInterval(
-    () =>
-      tick().catch(e =>
-        console.error(
-          'Programmation :',
-          e.code || e.name
-        )
-      ),
-    15000
-  );
+  const interval =
+    setInterval(
+      () =>
+        tick().catch(
+          e =>
+            console.error(
+              'Programmation :',
+              e.code || e.name
+            )
+        ),
+      15000
+    );
 
   interval.unref();
 
@@ -3494,7 +4083,8 @@ async function main() {
         process.env.DISCORD_GUILD_ID
       ),
       {
-        body: commands(),
+        body:
+          commands(),
       }
     );
 
@@ -3502,16 +4092,16 @@ async function main() {
     process.env.DISCORD_TOKEN
   );
 
-  // ----------------------------------------------------------
-  // ARRÊT PROPRE
-  // ----------------------------------------------------------
-
   const shutdown = async () => {
     stopping = true;
 
-    clearInterval(interval);
+    clearInterval(
+      interval
+    );
 
-    for (const t of timers.values()) {
+    for (
+      const t of timers.values()
+    ) {
       clearTimeout(t);
     }
 
@@ -3536,11 +4126,13 @@ async function main() {
 
   const stop = () =>
     shutdown()
-      .then(() =>
-        process.exit(0)
+      .then(
+        () =>
+          process.exit(0)
       )
-      .catch(() =>
-        process.exit(1)
+      .catch(
+        () =>
+          process.exit(1)
       );
 
   process.once(
@@ -3564,7 +4156,9 @@ async function main() {
   };
 }
 
-if (require.main === module) {
+if (
+  require.main === module
+) {
   main().catch(e => {
     console.error(
       'Démarrage :',
