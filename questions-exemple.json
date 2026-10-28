@@ -1,25 +1,167 @@
 [
   {
-    "question": "Combien de cordes possède une guitare classique standard ?",
-    "choices": ["4", "5", "6", "8"],
-    "answer": 2,
-    "explanation": "Une guitare classique standard possède six cordes."
-  },
-  {
-    "question": "Quel instrument est un instrument à vent ?",
-    "choices": ["Le piano", "La trompette", "Le violon", "La batterie"],
-    "answer": 1,
-    "explanation": "La trompette appartient à la famille des cuivres."
-  },
-  {
-    "question": "Que désigne le tempo ?",
+    "question": "Qui a écrit et composé « Pour que tu m'aimes encore » pour Céline Dion ?",
     "choices": [
-      "La vitesse du morceau",
-      "Son volume sonore",
-      "Sa durée",
-      "Son nombre de voix"
+      "Pascal Obispo",
+      "Jean-Jacques Goldman",
+      "Florent Pagny",
+      "Patrick Bruel"
+    ],
+    "answer": 1,
+    "explanation": "Jean-Jacques Goldman a écrit et composé cette chanson, parue sur l'album D'eux en 1995."
+  },
+  {
+    "question": "Quel artiste a remporté le Grammy de l'album de l'année en 2026 avec DeBÍ TiRAR MáS FOToS ?",
+    "choices": [
+      "Drake",
+      "The Weeknd",
+      "Bad Bunny",
+      "Kendrick Lamar"
+    ],
+    "answer": 2,
+    "explanation": "Bad Bunny a remporté le Grammy de l'album de l'année en 2026 avec DeBÍ TiRAR MáS FOToS."
+  },
+  {
+    "question": "Dans quel pays Stromae est-il né ?",
+    "choices": [
+      "En Belgique",
+      "En France",
+      "Au Canada",
+      "En Suisse"
     ],
     "answer": 0,
-    "explanation": "Le tempo indique la vitesse d’exécution musicale."
+    "explanation": "Stromae, de son vrai nom Paul Van Haver, est né à Bruxelles, en Belgique."
+  },
+  {
+    "question": "Quel membre de Queen a écrit « Bohemian Rhapsody » ?",
+    "choices": [
+      "Brian May",
+      "Roger Taylor",
+      "John Deacon",
+      "Freddie Mercury"
+    ],
+    "answer": 3,
+    "explanation": "Freddie Mercury est l'auteur-compositeur de Bohemian Rhapsody, sorti en 1975."
+  },
+  {
+    "question": "Quel chanteur accompagne Daft Punk sur « Get Lucky » ?",
+    "choices": [
+      "Bruno Mars",
+      "Pharrell Williams",
+      "Justin Timberlake",
+      "Usher"
+    ],
+    "answer": 1,
+    "explanation": "Pharrell Williams chante sur Get Lucky. Nile Rodgers participe également au titre à la guitare."
+  },
+  {
+    "question": "Qui a écrit et composé « Ella, elle l'a », interprétée par France Gall ?",
+    "choices": [
+      "Serge Gainsbourg",
+      "Francis Cabrel",
+      "Michel Berger",
+      "Alain Souchon"
+    ],
+    "answer": 2,
+    "explanation": "Michel Berger a écrit les paroles et composé la musique d'Ella, elle l'a, sorti en 1987."
+  },
+  {
+    "question": "Quelle chanteuse a remporté le Grammy de la révélation de l'année en 2026 ?",
+    "choices": [
+      "Olivia Dean",
+      "Lola Young",
+      "Addison Rae",
+      "Sabrina Carpenter"
+    ],
+    "answer": 0,
+    "explanation": "Olivia Dean a remporté le prix Best New Artist lors des Grammy Awards 2026."
+  },
+  {
+    "question": "Quel compositeur a créé le célèbre « Boléro » ?",
+    "choices": [
+      "Claude Debussy",
+      "Georges Bizet",
+      "Camille Saint-Saëns",
+      "Maurice Ravel"
+    ],
+    "answer": 3,
+    "explanation": "Le Boléro a été composé par Maurice Ravel en 1928."
+  },
+  {
+    "question": "Que signifie le « E » de Sacem ?",
+    "choices": [
+      "Événements",
+      "Éditeurs",
+      "Enregistrements",
+      "Écoles"
+    ],
+    "answer": 1,
+    "explanation": "Sacem signifie Société des auteurs, compositeurs et éditeurs de musique."
+  },
+  {
+    "question": "Qui a écrit et composé « Poupée de cire, poupée de son » pour France Gall ?",
+    "choices": [
+      "Jacques Brel",
+      "Michel Berger",
+      "Serge Gainsbourg",
+      "Charles Aznavour"
+    ],
+    "answer": 2,
+    "explanation": "Serge Gainsbourg a écrit et composé cette chanson, avec laquelle France Gall a gagné l'Eurovision en 1965."
+  },
+  {
+    "question": "Quelle artiste partage le titre « luther » avec Kendrick Lamar ?",
+    "choices": [
+      "SZA",
+      "Rihanna",
+      "Doja Cat",
+      "Alicia Keys"
+    ],
+    "answer": 0,
+    "explanation": "SZA accompagne Kendrick Lamar sur luther, récompensé par le Grammy de l'enregistrement de l'année en 2026."
+  },
+  {
+    "question": "Qui interprète « WILDFLOWER », chanson de l'année aux Grammy Awards 2026 ?",
+    "choices": [
+      "Taylor Swift",
+      "Lana Del Rey",
+      "Miley Cyrus",
+      "Billie Eilish"
+    ],
+    "answer": 3,
+    "explanation": "WILDFLOWER est interprétée par Billie Eilish et coécrite avec FINNEAS. Elle a reçu le Grammy de la chanson de l'année en 2026."
+  },
+  {
+    "question": "Sur quel album de Stromae trouve-t-on « Papaoutai » et « Formidable » ?",
+    "choices": [
+      "Cheese",
+      "Racine carrée",
+      "Multitude",
+      "Nonante-cinq"
+    ],
+    "answer": 1,
+    "explanation": "Papaoutai et Formidable figurent sur Racine carrée, le deuxième album de Stromae, paru en 2013."
+  },
+  {
+    "question": "Sur quel album de Daft Punk figure « Get Lucky » ?",
+    "choices": [
+      "Discovery",
+      "Homework",
+      "Random Access Memories",
+      "Human After All"
+    ],
+    "answer": 2,
+    "explanation": "Get Lucky figure sur Random Access Memories, l'album de Daft Punk sorti en 2013."
+  },
+  {
+    "question": "Quel pays a remporté l'Eurovision 2025 avec JJ et « Wasted Love » ?",
+    "choices": [
+      "L'Autriche",
+      "La Suède",
+      "La Suisse",
+      "L'Italie"
+    ],
+    "answer": 0,
+    "explanation": "JJ a remporté l'Eurovision 2025 pour l'Autriche avec Wasted Love."
   }
 ]
